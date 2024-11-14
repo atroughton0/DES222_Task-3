@@ -798,6 +798,50 @@ A timeline feature as planned would used pins which would be an additional butto
 The map script and styling is the same that was used in the home page and journal.html but with its diamentions changed to be more square. Is also simular to the calendar page which uses if and for statements to retrieve data in a loop. The html code to produce this page can be seen below along with the first attempt design.
 
 ```
+<main class="main-content1">
+            <header class="header">
+                <h1 class="app-title">Trek Journal - Event Log</h1>
+                <p>Details for: <strong>{{ selected_date }}</strong></p> <!-- Display the date of the journal entry in the title -->
+            </header>
+
+            <div class="map-trip-container"> <!-- Map part of the page -->
+                {% if trips|length > 0 %} <!-- If amount fo dates is greater than 0, produce a map -->
+                <div class="map-container2">
+                    <div id="map"></div>
+                    <!-- Buttons inside map container -->
+                    <div class="layer-controls"> <!-- Map style buttons -->
+                        <button onclick="changeMapStyle('mapbox://styles/atroughton0/cm35kt3c900zb01pwgl3qbkz7')" title="Novel">📖</button>
+                        <button onclick="changeMapStyle('mapbox://styles/atroughton0/cm377mlbj003001q33hnm157q')" title="Outdoors">⛅</button>
+                        <button onclick="changeMapStyle('mapbox://styles/atroughton0/cm3ax49si00g301ptcqgrh7ar')" title="Satellite">🛰️</button>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="trip-details"> <!-- Individual trips section of the page -->
+                    <ul class="event-list"> <!-- Displayed as a list -->
+                        {% for trip in trips %}
+                            <li class="event-item"> <!-- Details of the trip -->
+                                <h3>Trip {{ loop.index }}</h3>
+                                <p><strong>Start Time:</strong> {{ trip.startTime }}</p>
+                                <p><strong>End Time:</strong> {{ trip.endTime }}</p>
+                                <p><strong>Distance:</strong> {{ trip.distance }} meters</p>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
+            {% if journal_entry %}
+                <section class="journal-section"> <!-- Text entry and image display -->
+                    <h2>Journal Entry</h2>
+                    <p>{{ journal_entry.entry }}</p>
+                    {% if journal_entry.image_path %} <!-- If folder exist for the entry date, gather image -->
+                        <img src="{{ url_for('static', filename='uploads/' + journal_entry.image_path) }}" 
+                             alt="Journal Image">
+                    {% endif %}
+                </section>
+            {% endif %}
+        </main>
 ```
 
 ![Image](Images/logv1.png)
