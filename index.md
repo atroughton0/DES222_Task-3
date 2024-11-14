@@ -824,6 +824,57 @@ It was determined to change this to weekly as monthly is too long of a time rang
 The index route in the python file was updated to perform these tasks and can be seen below.
 
 ```
+@webapplication.route("/", methods=['GET'])
+def index():
+    try:
+        # Load trip data #opens trip json file to read
+        with open(TRIPS_FILE, 'r') as f:
+            trips = json.load(f)
+
+        # Get the date 7 days ago
+        today = datetime.today() #Finds the present date
+        seven_days_ago = today - timedelta(days=7) # subtracts 7 to find the start to the week
+
+        # Filter trips from the last 7 days
+        recent_trips = [
+            trip for trip in trips 
+            if datetime.strptime(trip['startTime'].split()[0], "%d/%m/%Y") >= seven_days_ago
+        ]
+        
+        # Calculate weekly insights for the three text boxes
+        total_distance = sum(trip['distance'] for trip in recent_trips) # Sum of distance in the past week recorded
+        total_entries = len(recent_trips) # Number of trips
+        total_duration = sum(trip['duration'] for trip in recent_trips) # sum of trip duration in the past week
+
+        # Format and group the insights to be post
+        weekly_insights = {
+            "distance": format_distance(total_distance),
+            "entries": total_entries,
+            "duration": format_duration(total_duration),
+        }
+
+        # Extract details for each trip 
+        trip_events = [
+            {
+                'tripDate': trip['startTime'].split()[0],
+                'day': trip['dayOfWeek'],
+                'coordinates': trip['coordinates'][0]['location'] if trip['coordinates'] else None,
+                'description': f"Trip #{trip['id']} - Distance: {format_distance(trip['distance'])}"
+            }
+            for trip in recent_trips
+        ]
+
+        # Sort trips by date in descending order
+        recent_events = sorted(
+            trip_events, 
+            key=lambda x: datetime.strptime(x['tripDate'], "%d/%m/%Y"), 
+            reverse=True
+        )[:3]
+
+        # Pass insights and recent events to the index template
+        return render_template('index.html', 
+                               recent_trips=recent_events, 
+                               weekly_insights=weekly_insights)
 ```
 This replaces the placeholder values with actual recorded data.
 
