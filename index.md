@@ -739,35 +739,13 @@ Copiolet AI assistance was used in troubleshooting how to upload images after ma
 The idea is that all trips will need to be made visable on a page which allows the user to select a trip to view the journal entries for that day. This was done initialy by using the following html
 
 ```
-<div class="calendar-container">
-    {% if tripDate %} <!-- If a trip date exists... -->
-        {% for trips in tripDate %} <!-- Look for each individual trip in that date -->
-                            <h2>{{ event.day }}</h2>  <!-- Display the day and date -->
-                            <h5>{{ event.tripDate }}</h5>
-                        </div> <!-- Repeat for each day -->
-</div>
+
 ```
 
 the python allowing for this to happen was
 
 ```
-@webapplication.route('/calendar')
-def calendar():
-    try:
-        # Load trips data
-        with open(TRIPS_FILE, 'r') as f:
-            trips = json.load(f)
-        
-        # Extract dates and details from trips
-        trip_events = [
-            {
-                'tripDate': trip['startTime'].split()[0],
-                'time': trip['startTime'].split()[1],
-                'day': trip['dayOfWeek'],
-                'description': f"Trip #{trip['id']} - Distance: {format_distance(trip['distance'])}"
-            }
-            for trip in trips
-        ]
+
 ```
 
 This generated the following page
@@ -781,90 +759,19 @@ As displayed, trips are organised by there date -'startTime'- and provide a summ
 This had the '/calendar function' changed to satisfy these needs
 
 ```
-@webapplication.route('/calendar')
-def calendar():
-    try:
-        # Load trips data
-        with open(TRIPS_FILE, 'r') as f:
-            trips = json.load(f)
 
-        # Load journal entries data
-        with open(JOURNAL_FILE, 'r') as f:
-            journal_entries = json.load(f)
-        
-        # Extract dates and details from trips
-        trip_events = [
-            {
-                'tripDate': trip['startTime'].split()[0],
-                'time': trip['startTime'].split()[1],
-                'day': trip['dayOfWeek'],
-                'description': f"Trip #{trip['id']} - Distance: {format_distance(trip['distance'])}"
-            }
-            for trip in trips
-        ]
-        
-        # Extract dates and details from journal entries
-        journal_events = [
-            {
-                'tripDate': datetime.strptime(entry['date'], "%d/%m/%Y").strftime("%d/%m/%Y"),
-                'time': None,
-                'day': datetime.strptime(entry['date'], "%d/%m/%Y").strftime("%A"),
-                'description': "Journal Entry"
-            }
-            for entry in journal_entries
-        ]
-
-        # Combine events by date, both trip and text entries
-        combined_events_dict = {}
-        for event in trip_events + journal_events:
-            date = event['tripDate']
-            if date not in combined_events_dict:
-                combined_events_dict[date] = {
-                    'tripDate': date,
-                    'day': event['day'],
-                    'events': [event['description']]
-                }
-            else:
-                combined_events_dict[date]['events'].append(event['description'])
-
-        # Sort combined events in descending order by date
-        combined_events = sorted(
-            combined_events_dict.values(),
-            key=lambda x: datetime.strptime(x['tripDate'], "%d/%m/%Y"), #Formats the day into d/m/y as this is not the default standard
-            reverse=True #Order is reversed to display the most recent trip first
-        )
-
-        # Pass combined events to the calendar template
-        return render_template('calendar.html', events=combined_events) # Sorted order is sent
 ```
 
 This css was refined to achieve the look of a traditional calendar as put in the snipit below
 
 ```
-.calendar-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 12px;
-    padding: 16px;
-    width: 100%;
-}
+
 ```
 
 And finally the html section was updated to accomedate a dynamic system of dates being added and redirecting the user to the page of the date selected
 
 ```
- <div class="calendar-container">
-                {% if events %}
-                    {% for event in events %}
-                        <div class="date-group" onclick="location.href = '/log?date={{ event.tripDate }}'">
-                            <h2>{{ event.day }}</h2>
-                            <h5>{{ event.tripDate }}</h5>
-                        </div>
-                    {% endfor %}
-                {% else %}
-                    <p class="no-events">No trips recorded yet.</p>
-                {% endif %}
-            </div>
+
 ```
 
 Numerous of dates were added to the json file to test how multiple dates would look like. This final generated design can be seen below along demonstarting how responsiveness was achieved to adjust to a changing in screen width.
@@ -879,7 +786,7 @@ Numerous of dates were added to the json file to test how multiple dates would l
 Now approaching the end of what is required regarding the functionality criteria in the development stage of the double diamond process is creating the page which combines and displays all the location, text, and image records in the one place. This page will be called log.html and is accessible by clicking the date box displayed in calendar.html (as made possible through this line 
 
 ```
-<div class="date-group" onclick="location.href = '/log?date={{ event.tripDate }}'">
+
 ```
 
 In the project pitch for Trek, we aspired to deliver a journal system where it was more like a scrapbook where you can adjust pieces of the page, and draw freely to recreate that authentic journaling experience but due to the time constraints of the task and limitations of html and JavaScript will have the goal changed to just display a timeline, drawn map, text input and images. This provides a detailed summary of a recorded day efficiently in html. This design was sketched below to display roughly how it can look to achieve this goal.
@@ -891,50 +798,6 @@ A timeline feature as planned would used pins which would be an additional butto
 The map script and styling is the same that was used in the home page and journal.html but with its diamentions changed to be more square. Is also simular to the calendar page which uses if and for statements to retrieve data in a loop. The html code to produce this page can be seen below along with the first attempt design.
 
 ```
-<main class="main-content1">
-            <header class="header">
-                <h1 class="app-title">Trek Journal - Event Log</h1>
-                <p>Details for: <strong>{{ selected_date }}</strong></p> <!-- Display the date of the journal entry in the title -->
-            </header>
-
-            <div class="map-trip-container"> <!-- Map part of the page -->
-                {% if trips|length > 0 %} <!-- If amount fo dates is greater than 0, produce a map -->
-                <div class="map-container2">
-                    <div id="map"></div>
-                    <!-- Buttons inside map container -->
-                    <div class="layer-controls"> <!-- Map style buttons -->
-                        <button onclick="changeMapStyle('mapbox://styles/atroughton0/cm35kt3c900zb01pwgl3qbkz7')" title="Novel">📖</button>
-                        <button onclick="changeMapStyle('mapbox://styles/atroughton0/cm377mlbj003001q33hnm157q')" title="Outdoors">⛅</button>
-                        <button onclick="changeMapStyle('mapbox://styles/atroughton0/cm3ax49si00g301ptcqgrh7ar')" title="Satellite">🛰️</button>
-                    </div>
-                </div>
-                {% endif %}
-
-                <div class="trip-details"> <!-- Individual trips section of the page -->
-                    <ul class="event-list"> <!-- Displayed as a list -->
-                        {% for trip in trips %}
-                            <li class="event-item"> <!-- Details of the trip -->
-                                <h3>Trip {{ loop.index }}</h3>
-                                <p><strong>Start Time:</strong> {{ trip.startTime }}</p>
-                                <p><strong>End Time:</strong> {{ trip.endTime }}</p>
-                                <p><strong>Distance:</strong> {{ trip.distance }} meters</p>
-                            </li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            </div>
-
-            {% if journal_entry %}
-                <section class="journal-section"> <!-- Text entry and image display -->
-                    <h2>Journal Entry</h2>
-                    <p>{{ journal_entry.entry }}</p>
-                    {% if journal_entry.image_path %} <!-- If folder exist for the entry date, gather image -->
-                        <img src="{{ url_for('static', filename='uploads/' + journal_entry.image_path) }}" 
-                             alt="Journal Image">
-                    {% endif %}
-                </section>
-            {% endif %}
-        </main>
 ```
 
 ![Image](Images/logv1.png)
@@ -961,57 +824,6 @@ It was determined to change this to weekly as monthly is too long of a time rang
 The index route in the python file was updated to perform these tasks and can be seen below.
 
 ```
-@webapplication.route("/", methods=['GET'])
-def index():
-    try:
-        # Load trip data #opens trip json file to read
-        with open(TRIPS_FILE, 'r') as f:
-            trips = json.load(f)
-
-        # Get the date 7 days ago
-        today = datetime.today() #Finds the present date
-        seven_days_ago = today - timedelta(days=7) # subtracts 7 to find the start to the week
-
-        # Filter trips from the last 7 days
-        recent_trips = [
-            trip for trip in trips 
-            if datetime.strptime(trip['startTime'].split()[0], "%d/%m/%Y") >= seven_days_ago
-        ]
-        
-        # Calculate weekly insights for the three text boxes
-        total_distance = sum(trip['distance'] for trip in recent_trips) # Sum of distance in the past week recorded
-        total_entries = len(recent_trips) # Number of trips
-        total_duration = sum(trip['duration'] for trip in recent_trips) # sum of trip duration in the past week
-
-        # Format and group the insights to be post
-        weekly_insights = {
-            "distance": format_distance(total_distance),
-            "entries": total_entries,
-            "duration": format_duration(total_duration),
-        }
-
-        # Extract details for each trip 
-        trip_events = [
-            {
-                'tripDate': trip['startTime'].split()[0],
-                'day': trip['dayOfWeek'],
-                'coordinates': trip['coordinates'][0]['location'] if trip['coordinates'] else None,
-                'description': f"Trip #{trip['id']} - Distance: {format_distance(trip['distance'])}"
-            }
-            for trip in recent_trips
-        ]
-
-        # Sort trips by date in descending order
-        recent_events = sorted(
-            trip_events, 
-            key=lambda x: datetime.strptime(x['tripDate'], "%d/%m/%Y"), 
-            reverse=True
-        )[:3]
-
-        # Pass insights and recent events to the index template
-        return render_template('index.html', 
-                               recent_trips=recent_events, 
-                               weekly_insights=weekly_insights)
 ```
 This replaces the placeholder values with actual recorded data.
 
