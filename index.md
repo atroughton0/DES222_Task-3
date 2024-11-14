@@ -739,13 +739,7 @@ Copiolet AI assistance was used in troubleshooting how to upload images after ma
 The idea is that all trips will need to be made visable on a page which allows the user to select a trip to view the journal entries for that day. This was done initialy by using the following html
 
 ```
-<div class="calendar-container">
-    {% if tripDate %} <!-- If a trip date exists... -->
-        {% for trips in tripDate %} <!-- Look for each individual trip in that date -->
-                            <h2>{{ event.day }}</h2>  <!-- Display the day and date -->
-                            <h5>{{ event.tripDate }}</h5>
-                        </div> <!-- Repeat for each day -->
-</div>
+
 ```
 
 the python allowing for this to happen was
