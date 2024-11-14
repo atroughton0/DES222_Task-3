@@ -771,7 +771,18 @@ This css was refined to achieve the look of a traditional calendar as put in the
 And finally the html section was updated to accomedate a dynamic system of dates being added and redirecting the user to the page of the date selected
 
 ```
-
+ <div class="calendar-container">
+                {% if events %}
+                    {% for event in events %}
+                        <div class="date-group" onclick="location.href = '/log?date={{ event.tripDate }}'">
+                            <h2>{{ event.day }}</h2>
+                            <h5>{{ event.tripDate }}</h5>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="no-events">No trips recorded yet.</p>
+                {% endif %}
+            </div>
 ```
 
 Numerous of dates were added to the json file to test how multiple dates would look like. This final generated design can be seen below along demonstarting how responsiveness was achieved to adjust to a changing in screen width.
@@ -786,7 +797,7 @@ Numerous of dates were added to the json file to test how multiple dates would l
 Now approaching the end of what is required regarding the functionality criteria in the development stage of the double diamond process is creating the page which combines and displays all the location, text, and image records in the one place. This page will be called log.html and is accessible by clicking the date box displayed in calendar.html (as made possible through this line 
 
 ```
-
+<div class="date-group" onclick="location.href = '/log?date={{ event.tripDate }}'">
 ```
 
 In the project pitch for Trek, we aspired to deliver a journal system where it was more like a scrapbook where you can adjust pieces of the page, and draw freely to recreate that authentic journaling experience but due to the time constraints of the task and limitations of html and JavaScript will have the goal changed to just display a timeline, drawn map, text input and images. This provides a detailed summary of a recorded day efficiently in html. This design was sketched below to display roughly how it can look to achieve this goal.
